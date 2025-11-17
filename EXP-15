@@ -1,0 +1,88 @@
+import math
+from pprint import pprint
+
+# Calculate entropy of a dataset
+def entropy(data, target_attr):
+    val_freq = {}
+    data_entropy = 0.0
+
+    for record in data:
+        label = record[target_attr]
+        val_freq[label] = val_freq.get(label, 0) + 1
+
+    for freq in val_freq.values():
+        prob = freq / len(data)
+        data_entropy += -prob * math.log2(prob)
+
+    return data_entropy
+
+
+# Calculate information gain
+def information_gain(data, attr, target_attr):
+    val_freq = {}
+    subset_entropy = 0.0
+
+    for record in data:
+        key = record[attr]
+        val_freq[key] = val_freq.get(key, 0) + 1
+
+    for val in val_freq:
+        prob = val_freq[val] / sum(val_freq.values())
+        subset = [record for record in data if record[attr] == val]
+        subset_entropy += prob * entropy(subset, target_attr)
+
+    return entropy(data, target_attr) - subset_entropy
+
+
+# Build the decision tree using ID3
+def id3(data, attributes, target_attr):
+    class_labels = [record[target_attr] for record in data]
+
+    # If all instances have same label, return it
+    if class_labels.count(class_labels[0]) == len(class_labels):
+        return class_labels[0]
+
+    # If no attributes left, return majority
+    if not attributes:
+        return max(set(class_labels), key=class_labels.count)
+
+    # Select best attribute
+    gains = {attr: information_gain(data, attr, target_attr) for attr in attributes}
+    best_attr = max(gains, key=gains.get)
+
+    tree = {best_attr: {}}
+    remaining_attrs = [attr for attr in attributes if attr != best_attr]
+
+    # Branch for each value of best attribute
+    values = set(record[best_attr] for record in data)
+    for value in values:
+        subset = [record for record in data if record[best_attr] == value]
+
+        if not subset:
+            tree[best_attr][value] = max(set(class_labels), key=class_labels.count)
+        else:
+            tree[best_attr][value] = id3(subset, remaining_attrs, target_attr)
+
+    return tree
+
+
+# ---------------- EXAMPLE DATASET ------------------
+dataset = [
+    {"Outlook": "Sunny", "Temp": "Hot",  "Humidity": "High",   "Wind": "Weak",  "Play": "No"},
+    {"Outlook": "Sunny", "Temp": "Hot",  "Humidity": "High",   "Wind": "Strong","Play": "No"},
+    {"Outlook": "Overcast","Temp": "Hot","Humidity": "High",   "Wind": "Weak",  "Play": "Yes"},
+    {"Outlook": "Rain",  "Temp": "Mild", "Humidity": "High",   "Wind": "Weak",  "Play": "Yes"},
+    {"Outlook": "Rain",  "Temp": "Cool", "Humidity": "Normal", "Wind": "Weak",  "Play": "Yes"},
+    {"Outlook": "Rain",  "Temp": "Cool", "Humidity": "Normal", "Wind": "Strong","Play": "No"},
+    {"Outlook": "Overcast","Temp": "Cool","Humidity": "Normal","Wind": "Strong","Play": "Yes"},
+    {"Outlook": "Sunny", "Temp": "Mild", "Humidity": "High",   "Wind": "Weak",  "Play": "No"},
+    {"Outlook": "Sunny", "Temp": "Cool", "Humidity": "Normal", "Wind": "Weak",  "Play": "Yes"},
+    {"Outlook": "Rain",  "Temp": "Mild", "Humidity": "Normal", "Wind": "Weak",  "Play": "Yes"},
+]
+
+attributes = ["Outlook", "Temp", "Humidity", "Wind"]
+
+# Build and display decision tree
+decision_tree = id3(dataset, attributes, "Play")
+print("\nGenerated Decision Tree using ID3:\n")
+pprint(decision_tree)
