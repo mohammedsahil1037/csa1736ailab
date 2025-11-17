@@ -1,0 +1,64 @@
+from heapq import heappush, heappop
+
+def a_star_search(graph, start, goal, h):
+    # Priority queue for A*
+    open_list = []
+    heappush(open_list, (0, start))
+
+    # Stores the cost from start to each node
+    g_cost = {node: float('inf') for node in graph}
+    g_cost[start] = 0
+
+    # For reconstructing the path
+    parent = {start: None}
+
+    while open_list:
+        current_cost, current_node = heappop(open_list)
+
+        # If goal is reached → stop
+        if current_node == goal:
+            break
+
+        # Explore neighbors
+        for neighbor, cost in graph[current_node].items():
+            new_cost = g_cost[current_node] + cost
+            if new_cost < g_cost[neighbor]:
+                g_cost[neighbor] = new_cost
+                f_cost = new_cost + h[neighbor]  # f = g + h (heuristic)
+                heappush(open_list, (f_cost, neighbor))
+                parent[neighbor] = current_node
+
+    # Reconstruct path
+    path = []
+    node = goal
+    while node:
+        path.append(node)
+        node = parent[node]
+
+    path.reverse()
+    return path, g_cost[goal]
+
+
+# --------------------- Example Graph --------------------
+
+graph = {
+    'A': {'B': 1, 'C': 4},
+    'B': {'A': 1, 'C': 2, 'D': 5},
+    'C': {'A': 4, 'B': 2, 'D': 1},
+    'D': {'B': 5, 'C': 1}
+}
+
+# Heuristic values (straight-line estimated cost to goal 'D')
+heuristic = {
+    'A': 7,
+    'B': 6,
+    'C': 2,
+    'D': 0
+}
+
+start = 'A'
+goal = 'D'
+
+path, cost = a_star_search(graph, start, goal, heuristic)
+print("Shortest Path:", path)
+print("Total Cost:", cost)
