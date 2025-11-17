@@ -1,0 +1,36 @@
+# Alpha-Beta Pruning Example (Game Tree Evaluation)
+
+def alpha_beta(node, depth, alpha, beta, maximizing, values):
+    # Leaf node
+    if depth == 0 or node >= len(values):
+        return values[node]
+
+    if maximizing:
+        best = float('-inf')
+        for i in range(2):  # Two children
+            value = alpha_beta(node*2 + 1 + i, depth - 1, alpha, beta, False, values)
+            best = max(best, value)
+            alpha = max(alpha, best)
+            
+            # Pruning condition
+            if beta <= alpha:
+                break
+        return best
+    else:
+        best = float('inf')
+        for i in range(2):
+            value = alpha_beta(node*2 + 1 + i, depth - 1, alpha, beta, True, values)
+            best = min(best, value)
+            beta = min(beta, best)
+
+            if beta <= alpha:
+                break
+        return best
+
+
+# Game tree leaf node values
+values = [3, 5, 6, 9, 1, 2, 0, -1]
+depth = 3
+
+result = alpha_beta(0, depth, float('-inf'), float('inf'), True, values)
+print("Best value for Maximizer using Alpha-Beta:", result)
