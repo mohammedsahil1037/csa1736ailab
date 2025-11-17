@@ -1,0 +1,55 @@
+# Map Coloring using Backtracking & CSP
+
+# Available colors
+colors = ["Red", "Green", "Blue", "Yellow"]
+
+# Adjacency list of map regions (Example: Australia Map)
+adjacency = {
+    "WA": ["NT", "SA"],
+    "NT": ["WA", "SA", "Q"],
+    "SA": ["WA", "NT", "Q", "NSW", "V"],
+    "Q": ["NT", "SA", "NSW"],
+    "NSW": ["SA", "Q", "V"],
+    "V": ["SA", "NSW"],
+    "T": []   # Tasmania is separate (no land borders)
+}
+
+# Dictionary to store final assigned colors
+color_assignment = {}
+
+def is_safe(region, color):
+    """Check if this color assignment violates any constraints"""
+    for neighbor in adjacency[region]:
+        if neighbor in color_assignment and color_assignment[neighbor] == color:
+            return False
+    return True
+
+def solve_map_coloring(region_index=0):
+    # If all regions are colored → solution found
+    if region_index == len(adjacency):
+        return True 
+
+    regions = list(adjacency.keys())
+    region = regions[region_index]
+
+    for color in colors:
+        if is_safe(region, color):
+            color_assignment[region] = color
+
+            # Recursively color remaining regions
+            if solve_map_coloring(region_index + 1):
+                return True
+
+            # Backtrack
+            del color_assignment[region]
+
+    return False
+
+
+# Run CSP solver
+if solve_map_coloring():
+    print("Solution Found:")
+    for region in color_assignment:
+        print(f"{region} --> {color_assignment[region]}")
+else:
+    print("No valid coloring possible!")
